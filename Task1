@@ -1,0 +1,57 @@
+from langchain_community.document_loaders import (
+    TextLoader,
+    PyPDFLoader,
+    Docx2txtLoader,
+    UnstructuredHTMLLoader
+)
+import os
+
+# Input files
+TXT_FILE = "legal document.txt"
+PDF_FILE = "the_constitution_of_india.pdf"
+DOCX_FILE = "THE INDIAN PENAL CODE.docx"
+HTML_FILE = "India Code_ Section Details.html"
+
+# Output directory
+OUTPUT_DIR = "output"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# -------- TXT --------
+print("Processing TXT...")
+txt_docs = TextLoader(TXT_FILE, encoding="utf-8").load()
+with open(f"{OUTPUT_DIR}/txt_output.txt", "w", encoding="utf-8") as f:
+    f.write("SOURCE : legal document.txt\nTYPE   : TXT\n")
+    f.write("-" * 50 + "\n")
+    for doc in txt_docs:
+        f.write(doc.page_content)
+
+# -------- PDF --------
+print("Processing PDF...")
+pdf_docs = PyPDFLoader(PDF_FILE).load()
+with open(f"{OUTPUT_DIR}/pdf_output.txt", "w", encoding="utf-8") as f:
+    f.write("SOURCE : the_constitution_of_india.pdf\nTYPE   : PDF\n")
+    f.write("-" * 50 + "\n")
+    for doc in pdf_docs:
+        f.write(f"\n--- Page {doc.metadata.get('page', 0) + 1} ---\n")
+        f.write(doc.page_content)
+
+# -------- DOCX --------
+print("Processing DOCX...")
+docx_docs = Docx2txtLoader(DOCX_FILE).load()
+with open(f"{OUTPUT_DIR}/docx_output.txt", "w", encoding="utf-8") as f:
+    f.write("SOURCE : THE INDIAN PENAL CODE.docx\nTYPE   : DOCX\n")
+    f.write("-" * 50 + "\n")
+    for doc in docx_docs:
+        f.write(doc.page_content)
+
+# -------- HTML --------
+print("Processing HTML...")
+html_docs = UnstructuredHTMLLoader(HTML_FILE).load()
+with open(f"{OUTPUT_DIR}/html_output.txt", "w", encoding="utf-8") as f:
+    f.write("SOURCE : India Code_ Section Details.html\nTYPE   : HTML\n")
+    f.write("-" * 50 + "\n")
+    for doc in html_docs:
+        f.write(doc.page_content)
+
+print("✅ DOC, TXT, PDF, HTML saved in separate files")
+        
