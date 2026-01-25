@@ -4,54 +4,79 @@ from langchain_community.document_loaders import (
     Docx2txtLoader,
     UnstructuredHTMLLoader
 )
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 import os
 
-# Input files
+
+# Input Files
+
 TXT_FILE = "legal document.txt"
 PDF_FILE = "the_constitution_of_india.pdf"
 DOCX_FILE = "THE INDIAN PENAL CODE.docx"
 HTML_FILE = "India Code_ Section Details.html"
 
-# Output directory
+
+# Output Directory
+
 OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# -------- TXT --------
-print("Processing TXT...")
+
+# Text Splitter Configuration
+
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=2000,
+    chunk_overlap=200
+)
+
+
+# TXT FILE
+
+print("Processing TXT file...")
 txt_docs = TextLoader(TXT_FILE, encoding="utf-8").load()
-with open(f"{OUTPUT_DIR}/txt_output.txt", "w", encoding="utf-8") as f:
-    f.write("SOURCE : legal document.txt\nTYPE   : TXT\n")
-    f.write("-" * 50 + "\n")
-    for doc in txt_docs:
-        f.write(doc.page_content)
+txt_chunks = text_splitter.split_documents(txt_docs)
 
-# -------- PDF --------
-print("Processing PDF...")
+with open(f"{OUTPUT_DIR}/txt_chunks.txt", "w", encoding="utf-8") as f:
+    for i, chunk in enumerate(txt_chunks, start=1):
+        f.write(f"\n------- TXT CHUNK {i} -------\n")
+        f.write(chunk.page_content)
+
+
+# PDF FILE
+
+print("Processing PDF file...")
 pdf_docs = PyPDFLoader(PDF_FILE).load()
-with open(f"{OUTPUT_DIR}/pdf_output.txt", "w", encoding="utf-8") as f:
-    f.write("SOURCE : the_constitution_of_india.pdf\nTYPE   : PDF\n")
-    f.write("-" * 50 + "\n")
-    for doc in pdf_docs:
-        f.write(f"\n--- Page {doc.metadata.get('page', 0) + 1} ---\n")
-        f.write(doc.page_content)
+pdf_chunks = text_splitter.split_documents(pdf_docs)
 
-# -------- DOCX --------
-print("Processing DOCX...")
+with open(f"{OUTPUT_DIR}/pdf_chunks.txt", "w", encoding="utf-8") as f:
+    for i, chunk in enumerate(pdf_chunks, start=1):
+        f.write(f"\n------- PDF CHUNK {i} -------\n")
+        f.write(chunk.page_content)
+
+
+# DOCX FILE
+
+print("Processing DOCX file...")
 docx_docs = Docx2txtLoader(DOCX_FILE).load()
-with open(f"{OUTPUT_DIR}/docx_output.txt", "w", encoding="utf-8") as f:
-    f.write("SOURCE : THE INDIAN PENAL CODE.docx\nTYPE   : DOCX\n")
-    f.write("-" * 50 + "\n")
-    for doc in docx_docs:
-        f.write(doc.page_content)
+docx_chunks = text_splitter.split_documents(docx_docs)
 
-# -------- HTML --------
-print("Processing HTML...")
+with open(f"{OUTPUT_DIR}/docx_chunks.txt", "w", encoding="utf-8") as f:
+    for i, chunk in enumerate(docx_chunks, start=1):
+        f.write(f"\n------- DOCX CHUNK {i} -------\n")
+        f.write(chunk.page_content)
+
+
+# HTML FILE
+
+print("Processing HTML file...")
 html_docs = UnstructuredHTMLLoader(HTML_FILE).load()
-with open(f"{OUTPUT_DIR}/html_output.txt", "w", encoding="utf-8") as f:
-    f.write("SOURCE : India Code_ Section Details.html\nTYPE   : HTML\n")
-    f.write("-" * 50 + "\n")
-    for doc in html_docs:
-        f.write(doc.page_content)
+html_chunks = text_splitter.split_documents(html_docs)
 
-print("✅ DOC, TXT, PDF, HTML saved in separate files")
-        
+with open(f"{OUTPUT_DIR}/html_chunks.txt", "w", encoding="utf-8") as f:
+    for i, chunk in enumerate(html_chunks, start=1):
+        f.write(f"\n------- HTML CHUNK {i} -------\n")
+        f.write(chunk.page_content)
+
+print("Task-1 completed successfully (Milestone-1)")
+
