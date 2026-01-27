@@ -1,0 +1,96 @@
+# Storing & Retrieving data into Vector Database:
+
+import os
+from sentence_transformers import SentenceTransformer
+import chromadb
+from chromadb.config import Settings
+
+from docx import Document
+from PyPDF2 import PdfReader
+from bs4 import BeautifulSoup
+
+# 1. LOAD DOCUMENTS
+
+def load_text(file_path):
+    if file_path.endswith(".txt"):
+        return open(file_path, "r", encoding="utf-8").read()
+
+    elif file_path.endswith(".pdf"):
+        reader = PdfReader(file_path)
+        return " ".join([page.extract_text() for page in reader.pages])
+
+    elif file_path.endswith(".docx"):
+        doc = Document(file_path)
+        return " ".join([p.text for p in doc.paragraphs])
+
+    elif file_path.endswith(".html"):
+        soup = BeautifulSoup(open(file_path, "r", encoding="utf-8"), "html.parser")
+        return soup.get_text()
+
+    return ""
+
+files = [
+    "legal document.txt",
+    "THE INDIAN PENAL CODE.docx",
+    "the_constitution_of_india.pdf",
+    "India Code_ Section Details.html"
+]
+
+documents = []
+metadatas = []
+
+for file in files:
+    text = load_text(file)
+    if text:
+        documents.append(text)
+        metadatas.append({"source": file})
+
+print("Documents loaded:", len(documents))
+
+# 2. EMBEDDINGS MODEL
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# 3. VECTOR DATABASE (CHROMA)
+
+client = chromadb.Client(
+    Settings(persist_directory="chroma_db", anonymized_telemetry=False)
+)
+
+collection = client.get_or_create_collection(
+    name="legal_docs",
+    
+)
+
+collection.add(
+    documents=documents,
+    metadatas=metadatas,
+    ids=[f"doc_{i}" for i in range(len(documents))]
+)
+
+print("Stored documents in Vector DB")
+
+# 4. SEARCH FUNCTION
+
+def search(query, top_k=3):
+    results = collection.query(
+        query_texts=[query],
+        n_results=top_k
+    )
+
+    print("\nQuestion:", query)
+    print("\nTop Results:\n")
+
+    for i in range(len(results["documents"][0])):
+        print(f"Result {i+1}")
+        print("Source:", results["metadatas"][0][i]["source"])
+        print(results["documents"][0][i][:400])
+        print("-" * 60)
+
+# 5. USER QUERY LOOP
+
+while True:
+    q = input("\nAsk a question (type exit to stop): ")
+    if q.lower() == "exit":
+        break
+    search(q)
